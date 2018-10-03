@@ -214,14 +214,14 @@ int compile_output(const CoinInfo *coin, const HDNode *root, TxOutputType *in, T
 		return r;
 	}
 
-	if (in->script_type == TxAck_TransactionType_TxOutputType_OutputScriptType_PAYTOPARTICLDATA) {
+	if (in->script_type == OutputScriptType_PAYTOPARTICLDATA) {
 		// only 0 satoshi allowed for OP_RETURN
 		if (in->amount != 0) {
 			return 0; // failed to compile output
 		}
 		if (needs_confirm) {
 			layoutConfirmOpReturn(in->op_return_data.bytes, in->op_return_data.size);
-			if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
 				return -1; // user aborted
 			}
 		}
