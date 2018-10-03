@@ -461,6 +461,15 @@ bool compile_input_script_sig(TxInputType *tinput)
 		// Failed to derive private key
 		return false;
 	}
+
+	if (tinput->particl_shared_secret.size == 32) {
+		bignum256 a, b;
+		bn_read_be(node.private_key, &a);
+		bn_read_be(tinput->particl_shared_secret.bytes, &b);
+		bn_addmod(&a, &b, &node.curve->params->order);
+		bn_write_be(&a, node.private_key);
+	}
+
 	hdnode_fill_public_key(&node);
 	if (tinput->has_multisig) {
 		tinput->script_sig.size = compile_script_multisig(coin, &(tinput->multisig), tinput->script_sig.bytes);

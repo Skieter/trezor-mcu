@@ -120,8 +120,84 @@ const char *requestPin(PinMatrixRequestType type, const char *text)
 	usbTiny(1);
 	msg_write(MessageType_MessageType_PinMatrixRequest, &resp);
 	pinmatrix_start(text);
+#ifdef PARTICL
+	PinMatrixAck *pma = (PinMatrixAck *)msg_tiny;
+	int i = 0;
+
+	_particl.row = 2;
+	_particl.col = 0;
+	_particl.tmp = dig[_particl.row][_particl.col];
+	const int w = 16, h = 16, pad = 2;
+	_particl.x = (OLED_WIDTH - 3 * w - 2 * pad) / 2 + ((_particl.tmp - '1') % 3) * (w + pad);
+	_particl.y = OLED_HEIGHT - 3 * h - 2 * pad + ((_particl.tmp - '1') / 3) * (h + pad);
+	oledInvert(_particl.x, _particl.y, _particl.x + 1 * (w + pad), _particl.y + 1 * (h + pad));
+	oledRefresh();
+#else
+	usbTiny(1);
+	msg_write(MessageType_MessageType_PinMatrixRequest, &resp);
+#endif
 	for (;;) {
 		usbPoll();
+#ifdef PARTICL
+		buttonUpdate();
+
+		if(button.YesDown && button.NoDown) {
+			pma->pin[i++] = _particl.tmp;	
+			_particl.tmp = dig[_particl.row][_particl.col];
+			_particl.x = (OLED_WIDTH - 3 * w - 2 * pad) / 2 + ((_particl.tmp - '1') % 3) * (w + pad);
+			_particl.y = OLED_HEIGHT - 3 * h - 2 * pad + ((_particl.tmp - '1') / 3) * (h + pad);
+			oledInvert(_particl.x, _particl.y, _particl.x + 1 * (w + pad), _particl.y + 1 * (h + pad));
+			oledRefresh();		
+			usbTiny(1);
+			usbSleep(1000);
+			usbTiny(0);
+			oledInvert(_particl.x, _particl.y, _particl.x + 1 * (w + pad), _particl.y + 1 * (h + pad));
+			oledRefresh();
+		}
+		
+		if(button.YesUp) {
+			_particl.tmp = dig[_particl.row][_particl.col];
+			_particl.x = (OLED_WIDTH - 3 * w - 2 * pad) / 2 + ((_particl.tmp - '1') % 3) * (w + pad);
+			_particl.y = OLED_HEIGHT - 3 * h - 2 * pad + ((_particl.tmp - '1') / 3) * (h + pad);
+			oledInvert(_particl.x, _particl.y, _particl.x + 1 * (w + pad), _particl.y + 1 * (h + pad));
+			oledRefresh();
+			_particl.col++;
+			if(_particl.col > 2)
+				_particl.col = 0;
+			_particl.tmp = dig[_particl.row][_particl.col];
+			_particl.x = (OLED_WIDTH - 3 * w - 2 * pad) / 2 + ((_particl.tmp - '1') % 3) * (w + pad);
+			_particl.y = OLED_HEIGHT - 3 * h - 2 * pad + ((_particl.tmp - '1') / 3) * (h + pad);
+			oledInvert(_particl.x, _particl.y, _particl.x + 1 * (w + pad), _particl.y + 1 * (h + pad));
+			oledRefresh();
+		}
+
+		if(button.NoUp) {
+			_particl.tmp = dig[_particl.row][_particl.col];
+			_particl.x = (OLED_WIDTH - 3 * w - 2 * pad) / 2 + ((_particl.tmp - '1') % 3) * (w + pad);
+			_particl.y = OLED_HEIGHT - 3 * h - 2 * pad + ((_particl.tmp - '1') / 3) * (h + pad);
+			oledInvert(_particl.x, _particl.y, _particl.x + 1 * (w + pad), _particl.y + 1 * (h + pad));
+			oledRefresh();
+			_particl.row--;
+			if(_particl.row < 0)
+				_particl.row = 2;
+			_particl.tmp = dig[_particl.row][_particl.col];
+			_particl.x = (OLED_WIDTH - 3 * w - 2 * pad) / 2 + ((_particl.tmp - '1') % 3) * (w + pad);
+			_particl.y = OLED_HEIGHT - 3 * h - 2 * pad + ((_particl.tmp - '1') / 3) * (h + pad);
+			oledInvert(_particl.x, _particl.y, _particl.x + 1 * (w + pad), _particl.y + 1 * (h + pad));
+			oledRefresh();
+		}
+		
+		if(button.YesDown > 15) {
+			i = 0;
+			button.YesDown = 0;
+			//pinmatrix_done(pma->pin);
+			return pma->pin;						
+		} 
+		usbTiny(1);
+		usbSleep(50);
+		usbTiny(0);
+
+#else
 		if (msg_tiny_id == MessageType_MessageType_PinMatrixAck) {
 			msg_tiny_id = 0xFFFF;
 			PinMatrixAck *pma = (PinMatrixAck *)msg_tiny;
@@ -129,6 +205,7 @@ const char *requestPin(PinMatrixRequestType type, const char *text)
 			usbTiny(0);
 			return pma->pin;
 		}
+#endif
 		// check for Cancel / Initialize
 		protectAbortedByCancel = (msg_tiny_id == MessageType_MessageType_Cancel);
 		protectAbortedByInitialize = (msg_tiny_id == MessageType_MessageType_Initialize);

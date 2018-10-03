@@ -33,6 +33,11 @@
 #include "recovery-table.h"
 #include "memzero.h"
 #include "messages.pb.h"
+#include "buttons.h"
+
+#ifdef PARTICL
+void recovery_particl(void);
+#endif
 
 /* number of words expected in the new seed */
 static uint32_t word_count;
@@ -372,7 +377,25 @@ static void next_matrix(void) {
 	}
 	display_choices(last, word_choices, num);
 
+#ifdef PARTICL	
+	_particl.row = 0;
+	_particl.col = 0;
+	_particl.tmp = dig[_particl.row][_particl.col];
+
+	if(_particl.step == 3) {
+		_particl.x = 64 * ((_particl.tmp - '1') % 3);
+		_particl.y = 54 - ((_particl.tmp - '1') / 3) * 11;
+		oledInvert(_particl.x + 1, _particl.y, _particl.x + 64, _particl.y + 9);
+		oledRefresh();		
+	} else {
+		_particl.x = 42 * ((_particl.tmp - '1') % 3);
+		_particl.y = 54 - ((_particl.tmp - '1') / 3) * 11;
+		oledInvert(_particl.x + 1, _particl.y, _particl.x + 42, _particl.y + 9);
+		oledRefresh();
+	}
+#else
 	recovery_request();
+#endif	
 }
 
 /* Function called when a digit was entered by user.
@@ -419,6 +442,7 @@ static void recovery_digit(const char digit) {
 		word_pincode = 0;
 		strlcpy(words[widx], mnemonic_wordlist()[idx], sizeof(words[widx]));
 		if (widx + 1 == word_count) {
+			_particl.recovery_mode = false;
 			recovery_done();
 			return;
 		}
@@ -474,7 +498,10 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection, bool pin_pr
 		awaiting_word = 2;
 		word_index = 0;
 		word_pincode = 0;
+		_particl.step = 0;
 		next_matrix();
+		_particl.recovery_mode = true;
+		recovery_particl();
 	} else {
 		for (uint32_t i = 0; i < word_count; i++) {
 			word_order[i] = i + 1;
@@ -558,6 +585,101 @@ void recovery_abort(void)
 		awaiting_word = 0;
 	}
 }
+
+#ifdef PARTICL
+void recovery_particl(void)
+{	
+	while(_particl.recovery_mode == true) {
+		buttonUpdate();
+		if(_particl.step == 3) {
+			if(button.YesUp) {
+				_particl.tmp = dig[_particl.row][_particl.col];
+				_particl.x = 64 * ((_particl.tmp - '1') % 3);
+				_particl.y = 54 - ((_particl.tmp - '1') / 3) * 11;
+				oledInvert(_particl.x + 1, _particl.y, _particl.x + 64, _particl.y + 9);
+				oledRefresh();
+				_particl.col++;
+				if(_particl.col > 1)
+					_particl.col = 0;
+				_particl.tmp = dig[_particl.row][_particl.col];
+				_particl.x = 64 * ((_particl.tmp - '1') % 3);
+				_particl.y = 54 - ((_particl.tmp - '1') / 3) * 11;
+				oledInvert(_particl.x + 1, _particl.y, _particl.x + 64, _particl.y + 9);
+				oledRefresh();
+			}
+
+			if(button.NoUp) {
+				_particl.tmp = dig[_particl.row][_particl.col];
+				_particl.x = 64 * ((_particl.tmp - '1') % 3);
+				_particl.y = 54 - ((_particl.tmp - '1') / 3) * 11;
+				oledInvert(_particl.x + 1, _particl.y, _particl.x + 64, _particl.y + 9);
+				oledRefresh();
+				_particl.row++;
+				if(_particl.row > 2)
+					_particl.row = 0;
+				_particl.tmp = dig[_particl.row][_particl.col];
+				_particl.x = 64 * ((_particl.tmp - '1') % 3);
+				_particl.y = 54 - ((_particl.tmp - '1') / 3) * 11;
+				oledInvert(_particl.x + 1, _particl.y, _particl.x + 64, _particl.y + 9);
+				oledRefresh();
+			}
+		} else {
+			if(button.YesUp) {
+				_particl.tmp = dig[_particl.row][_particl.col];
+				_particl.x = 42 * ((_particl.tmp - '1') % 3);
+				_particl.y = 54 - ((_particl.tmp - '1') / 3) * 11;
+				oledInvert(_particl.x + 1, _particl.y, _particl.x + 42, _particl.y + 9);
+				oledRefresh();
+				_particl.col++;
+				if(_particl.col > 2)
+					_particl.col = 0;
+				_particl.tmp = dig[_particl.row][_particl.col];
+				_particl.x = 42 * ((_particl.tmp - '1') % 3);
+				_particl.y = 54 - ((_particl.tmp - '1') / 3) * 11;
+				oledInvert(_particl.x + 1, _particl.y, _particl.x + 42, _particl.y + 9);
+				oledRefresh();
+			}
+
+			if(button.NoUp) {
+				_particl.tmp = dig[_particl.row][_particl.col];
+				_particl.x = 42 * ((_particl.tmp - '1') % 3);
+				_particl.y = 54 - ((_particl.tmp - '1') / 3) * 11;
+				oledInvert(_particl.x + 1, _particl.y, _particl.x + 42, _particl.y + 9);
+				oledRefresh();
+				_particl.row++;
+				if(_particl.row > 2)
+					_particl.row = 0;
+				_particl.tmp = dig[_particl.row][_particl.col];
+				_particl.x = 42 * ((_particl.tmp - '1') % 3);
+				_particl.y = 54 - ((_particl.tmp - '1') / 3) * 11;
+				oledInvert(_particl.x + 1, _particl.y, _particl.x + 42, _particl.y + 9);
+				oledRefresh();
+			}
+		}
+
+		if(button.NoDown > 15) {
+			button.NoDown = 0;			
+			if(_particl.step > 0)
+				_particl.step--;
+			recovery_digit(0x08);			
+		} 
+
+		if(button.YesDown && button.NoDown) {
+			button.NoDown = 0;
+			button.YesDown = 0;
+			if(_particl.step == 3)
+				_particl.step = 0;
+			else
+				_particl.step++;
+			recovery_digit(_particl.tmp);
+		}
+
+		usbTiny(1);
+		usbSleep(100);
+		usbTiny(0);	
+	}	
+}
+#endif
 
 #if DEBUG_LINK
 

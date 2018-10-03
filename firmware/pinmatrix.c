@@ -53,7 +53,9 @@ void pinmatrix_start(const char *text)
 		pinmatrix_perm[i] = '1' + i;
 	}
 	pinmatrix_perm[9] = 0;
+#ifndef PARTICL
 	random_permute(pinmatrix_perm, 9);
+#endif
 	pinmatrix_draw(text);
 }
 

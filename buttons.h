@@ -23,6 +23,25 @@
 #include <libopencm3/stm32/gpio.h>
 #include <stdbool.h>
 
+#define PARTICL
+static const char dig[3][3] = {{'7', '8', '9'},
+				  		       {'4', '5', '6'},
+				  		       {'1', '2', '3'}};
+
+#ifdef PARTICL
+typedef struct {
+	char tmp;
+	int row;
+	int col;
+	int x;
+	int y;	
+	int step;
+	bool recovery_mode;
+}t_particl;
+
+extern t_particl _particl;
+#endif
+
 struct buttonState {
 	volatile bool YesUp;
 	volatile int YesDown;
