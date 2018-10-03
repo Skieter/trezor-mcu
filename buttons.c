@@ -19,6 +19,8 @@
 
 #include "buttons.h"
 
+t_particl _particl;
+
 struct buttonState button;
 
 #if !EMULATOR
