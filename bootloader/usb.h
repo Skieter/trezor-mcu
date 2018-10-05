@@ -20,6 +20,10 @@
 #ifndef __USB_H__
 #define __USB_H__
 
-void usbLoop(bool firmware_present);
+void usbInit(void);
+void usbPoll(void);
+void usbReconnect(void);
+char usbTiny(char set);
+void usbSleep(uint32_t millis);
 
 #endif
