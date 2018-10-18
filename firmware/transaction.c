@@ -318,16 +318,6 @@ int compile_output(const CoinInfo *coin, const HDNode *root, TxOutputType *in, T
 		out->script_pubkey.bytes[35] = 0x88; // OP_EQUALVERIFY
 		out->script_pubkey.bytes[36] = 0xAC; // OP_CHECKSIG
 		out->script_pubkey.size = 37;
-	} else if (coin->has_address_type                                  // p2pkh256
-		&& addr_raw_len == 32 + (prefix_len = address_prefix_bytes_len(coin->address_type))
-		&& address_check_prefix(addr_raw, coin->address_type+1)) {
-		out->script_pubkey.bytes[0] = 0x76; // OP_DUP
-		out->script_pubkey.bytes[1] = 0xA8; // OP_SHA256
-		out->script_pubkey.bytes[2] = 0x20; // pushing 32 bytes
-		memcpy(out->script_pubkey.bytes + 3, addr_raw + prefix_len, 32);
-		out->script_pubkey.bytes[35] = 0x88; // OP_EQUALVERIFY
-		out->script_pubkey.bytes[36] = 0xAC; // OP_CHECKSIG
-		out->script_pubkey.size = 37;
 	} else if (coin->has_address_type                                  // p2pkh256 coldstake
 		&& addr_raw_len == 52 + (prefix_len = address_prefix_bytes_len(coin->address_type))
 		&& address_check_prefix(addr_raw, coin->address_type+2)) {
